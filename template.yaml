@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: web-feeds
+
+Parameters:
+  DomainName:
+    Type: String
+  CertificateArn:
+    Type: String
+  ZoneName:
+    Type: String
+
+Globals:
+  HttpApi:
+    Domain:
+      DomainName: !Ref DomainName
+      CertificateArn: !Ref CertificateArn
+      Route53:
+        HostedZoneName: !Ref ZoneName
+  Function:
+    Architectures: [arm64]
+    Runtime: nodejs14.x
+    Handler: lambda.default
+    Timeout: 10
+
+Resources:
+  MinecraftReleasesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: minecraft-releases/
+      Events:
+        MinecraftReleases:
+          Type: HttpApi
+          Properties:
+            Path: /minecraft-releases
+            Method: get

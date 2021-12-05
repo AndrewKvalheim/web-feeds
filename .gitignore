@@ -1,0 +1,6 @@
+# AWS SAM
+/.aws-sam/
+/samconfig.toml
+
+# NPM
+/*/node_modules/
