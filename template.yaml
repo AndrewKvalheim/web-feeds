@@ -24,6 +24,17 @@ Globals:
     Timeout: 10
 
 Resources:
+  EverydayRidesSeattleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: everyday-rides-seattle/
+      Events:
+        EverydayRidesSeattle:
+          Type: HttpApi
+          Properties:
+            Path: /everyday-rides-seattle
+            Method: get
+
   MinecraftReleasesFunction:
     Type: AWS::Serverless::Function
     Properties:
