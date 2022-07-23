@@ -1,3 +1,3 @@
 # Web feeds
 
-Miscellaneous adapters from content published in proprietary data formats to standard web feeds
+Adapters from miscellaneous data sources to standard web feeds
