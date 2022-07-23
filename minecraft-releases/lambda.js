@@ -4,7 +4,7 @@ import { Feed } from "feed";
 const pkg = JSON.parse(readFileSync("./package.json"));
 
 const meta = {
-  generator: `${pkg.name}/${pkg.version} (${pkg.homepage})`,
+  generator: `web-feeds/${pkg.name}/${pkg.version} (${pkg.homepage})`,
   id: "https://somewhat.flawed.science/minecraft-releases",
   title: "Minecraft Releases",
   link: "https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs",
