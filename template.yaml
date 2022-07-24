@@ -45,3 +45,14 @@ Resources:
           Properties:
             Path: /minecraft-releases
             Method: get
+
+  PrasketNetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: prasket.net/
+      Events:
+        PrasketNet:
+          Type: HttpApi
+          Properties:
+            Path: /prasket.net
+            Method: get
