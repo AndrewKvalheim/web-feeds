@@ -17,6 +17,9 @@ Globals:
       CertificateArn: !Ref CertificateArn
       Route53:
         HostedZoneName: !Ref ZoneName
+    DefaultRouteSettings:
+      ThrottlingRateLimit: 1
+      ThrottlingBurstLimit: 4
   Function:
     Architectures: [arm64]
     Runtime: nodejs14.x
