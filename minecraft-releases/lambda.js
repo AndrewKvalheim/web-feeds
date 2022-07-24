@@ -13,11 +13,24 @@ const query =
   "https://feedback.minecraft.net/api/v2/help_center/en-us/sections/360001186971/articles?sort_by=created_at&sort_order=desc";
 const filter = /Java/;
 
-const build = async () => {
-  console.info("Fetch: %j", { url: query });
-  const { articles } = await (
-    await fetch(query, { headers: { "User-Agent": meta.generator } })
-  ).json();
+const reuse = (response, key) => {
+  const value = response.headers.get(key);
+  return value && { [key]: value };
+};
+
+export default async ({
+  headers: { "if-modified-since": since, "if-none-match": etag },
+}) => {
+  console.info("Fetch: %j", { url: query, etag, since });
+  const response = await fetch(query, {
+    headers: {
+      "User-Agent": meta.generator,
+      ...(etag && { "If-None-Match": etag }),
+      ...(since && { "If-Modified-Since": since }),
+    },
+  });
+  if (response.status === 304) return { statusCode: 304 };
+  const { articles } = await response.json();
 
   console.info("Feed: %j", { id: meta.id });
   const feed = new Feed(meta);
@@ -36,11 +49,13 @@ const build = async () => {
       });
     });
 
-  return feed.atom1();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/atom+xml",
+      ...reuse(response, "ETag"),
+      ...reuse(response, "Last-Modified"),
+    },
+    body: feed.atom1(),
+  };
 };
-
-export default async () => ({
-  statusCode: 200,
-  headers: { "Content-Type": "application/atom+xml" },
-  body: await build(),
-});

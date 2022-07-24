@@ -15,11 +15,27 @@ const meta = {
 };
 const query = "https://everydayrides.com/cities/seattle-wa/calendar.ics";
 
-const build = async () => {
-  console.info("Fetch: %j", { url: query });
-  const ics = await (
-    await fetch(query, { headers: { "User-Agent": meta.generator } })
-  ).text();
+const reuse = (response, key) => {
+  const value = response.headers.get(key);
+  return value && { [key]: value };
+};
+
+const simpleFormat = (text) =>
+  `<p>${text.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>")}</p>`;
+
+export default async ({
+  headers: { "if-modified-since": since, "if-none-match": etag },
+}) => {
+  console.info("Fetch: %j", { url: query, etag, since });
+  const response = await fetch(query, {
+    headers: {
+      "User-Agent": meta.generator,
+      ...(etag && { "If-None-Match": etag }),
+      ...(since && { "If-Modified-Since": since }),
+    },
+  });
+  if (response.status === 304) return { statusCode: 304 };
+  const ics = await response.text();
   const recordsById = ical.sync.parseICS(ics);
   const events = Object.values(recordsById)
     .filter(({ type }) => type === "VEVENT")
@@ -41,14 +57,13 @@ const build = async () => {
     });
   });
 
-  return feed.atom1();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/atom+xml",
+      ...reuse(response, "ETag"),
+      ...reuse(response, "Last-Modified"),
+    },
+    body: feed.atom1(),
+  };
 };
-
-const simpleFormat = (text) =>
-  `<p>${text.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>")}</p>`;
-
-export default async () => ({
-  statusCode: 200,
-  headers: { "Content-Type": "application/atom+xml" },
-  body: await build(),
-});

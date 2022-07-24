@@ -16,11 +16,23 @@ const meta = {
 };
 const indexUrl = "https://prasket.net/blog.html";
 
-const build = async () => {
-  console.info("Fetch: %j", { url: indexUrl });
+const reuse = (response, key) => {
+  const value = response.headers.get(key);
+  return value && { [key]: value };
+};
+
+export default async ({
+  headers: { "if-modified-since": since, "if-none-match": etag },
+}) => {
+  console.info("Fetch: %j", { url: indexUrl, etag, since });
   const response = await fetch(indexUrl, {
-    headers: { "User-Agent": meta.generator },
+    headers: {
+      "User-Agent": meta.generator,
+      ...(etag && { "If-None-Match": etag }),
+      ...(since && { "If-Modified-Since": since }),
+    },
   });
+  if (response.status === 304) return { statusCode: 304 };
   const mtime = DateTime.fromHTTP(response.headers.get("last-modified"));
   const dom = new JSDOM(await response.text());
 
@@ -54,11 +66,13 @@ const build = async () => {
     });
   });
 
-  return feed.atom1();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/atom+xml",
+      ...reuse(response, "ETag"),
+      ...reuse(response, "Last-Modified"),
+    },
+    body: feed.atom1(),
+  };
 };
-
-export default async () => ({
-  statusCode: 200,
-  headers: { "Content-Type": "application/atom+xml" },
-  body: await build(),
-});
